@@ -19,6 +19,5 @@ class SingleContact {
         System.out.println("A Phone Book with a single record created!");
 
         sc.close();
-
     }
 }
