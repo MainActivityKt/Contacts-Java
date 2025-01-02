@@ -1,4 +1,4 @@
-package Contacts.SmartPhonebook;
+package contacts.smartphonebook;
 
 import java.util.Scanner;
 

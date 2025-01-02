@@ -1,5 +1,7 @@
 package utils;
 
+import java.time.DateTimeException;
+import java.time.LocalDate;
 import java.util.regex.Pattern;
 
 public class Validator {
@@ -31,5 +33,15 @@ public class Validator {
             }
         }
         return true;
+    }
+
+    public static boolean isBirthDateValid(String birthDate) {
+        try {
+            LocalDate.parse(birthDate);
+            return true;
+        } catch (
+                DateTimeException e) {
+            return false;
+        }
     }
 }

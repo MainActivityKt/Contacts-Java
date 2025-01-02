@@ -1,4 +1,4 @@
-package Contacts.SmartPhonebook;
+package contacts.smartphonebook;
 
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -45,7 +45,7 @@ public class Phonebook {
     private static void listContacts() {
         for (int i = 0; i < contacts.size(); i++) {
             String contact = contacts.get(i).toString();
-            System.out.printf("%d. %s\n", i + 1, contact);
+            System.out.printf("%d. %s", i + 1, contact);
         }
     }
 
