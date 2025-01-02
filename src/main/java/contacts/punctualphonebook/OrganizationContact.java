@@ -1,7 +1,6 @@
 package contacts.punctualphonebook;
 
 import utils.Validator;
-
 import java.time.LocalDateTime;
 
 class OrganizationContact extends Contact {

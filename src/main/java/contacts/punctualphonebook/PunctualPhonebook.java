@@ -105,7 +105,6 @@ public class PunctualPhonebook {
             }
         };
 
-
         String numberString = getInput("Enter the number: ");
         if (Validator.isPhoneNumberValid(numberString)) {
             number = numberString;
@@ -113,7 +112,6 @@ public class PunctualPhonebook {
             System.out.println("Wrong number format!");
             number = null;
         }
-
         contacts.add(new PersonContact(firstName, lastName, birthDate, gender, number));
     }
 
@@ -154,5 +152,4 @@ public class PunctualPhonebook {
         System.out.printf("%s", message);
         return sc.nextLine();
     }
-
 }

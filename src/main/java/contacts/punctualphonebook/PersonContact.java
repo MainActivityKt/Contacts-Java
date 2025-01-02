@@ -31,16 +31,16 @@ class PersonContact extends Contact {
                 Number: %s
                 Time created: %s
                 Time last edit: %s
-                """, firstname, lastName, birthday != null ? birthday : "[no data]", gender,
+                """, firstname, lastName, birthday != null ? birthday : "[no data]", gender != null ? gender : "[no data]",
                 phoneNumber != null ? phoneNumber : "[no data]", creationDate, lastEditDate);
     }
 
     void changeFirstName(String updatedFirstName) {
-        name = updatedFirstName;
+        firstname = updatedFirstName;
     }
 
     void changeSurname(String updatedSurname) {
-        name = updatedSurname;
+        lastName = updatedSurname;
     }
 
     void changeNumber(String updatedNumber) {
@@ -73,9 +73,7 @@ class PersonContact extends Contact {
     }
 
     @Override
-    String getModifiableFields() {
+    public String getModifiableFields() {
         return "name, surname, birth, gender, number";
     }
-
-
 }
