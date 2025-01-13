@@ -1,34 +1,71 @@
-package contacts.punctualphonebook;
+package contacts.memorablephonebook;
 
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
 import contacts.GENDER;
+import kotlin.text.Regex;
 import utils.Validator;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
+import java.util.regex.Pattern;
 
-public class PunctualPhonebook {
-    static ArrayList<Contact> contacts = new ArrayList<>();
-    static final String actions = "Enter action (add, remove, edit, count, info, exit): ";
-    static final Scanner sc = new Scanner(System.in);
 
-    public static void main(String[] args) {
-        String input = "";
+public class MemorablePhonebook {
 
-        while (!input.equals("exit")) {
-            input = getInput(actions);
+    static final String MENU_ITEMS = "Enter action (add, list, search, count, exit): ";
+    static final String LIST_ACTIONS = "Enter action ([number], back): ";
+    static final String RECORD_ACTIONS = "Enter action (edit, delete, menu):";
+    static final String SEARCH_ACTIONS = "Enter action ([number], back, again): ";
+    static String input = "";
+
+    static Scanner sc = new Scanner(System.in);
+    static ArrayList<SerializableContact> contacts = new ArrayList<>();
+    static File file;
+    static OPTION currentOption;
+
+
+    static final Moshi MOSHI = new Moshi.Builder().build();
+    static JsonAdapter<SerializableContact> jsonAdapter = MOSHI.adapter(SerializableContact.class);
+
+    public static void main(String[] args) throws IOException {
+
+
+        if (args.length == 2) {
+            file = new File(args[1]);
+        } else {
+            file = new File("phonebook.db");
+            System.out.println("Created");
+        }
+        List<String> lines = Files.readAllLines(file.toPath());
+
+        for (String line : lines) {
+            contacts.add(jsonAdapter.fromJson(line));
+        }
+
+
+        while (!input.equalsIgnoreCase("exit")) {
+            currentOption = OPTION.MENU;
+            input = getInput(currentOption, MENU_ITEMS);
 
             switch (input) {
                 case "add" -> addContact();
-                case "remove" -> removeContact();
-                case "edit" -> editContact();
+                case "list" -> listContacts();
+                case "search" -> searchContacts();
                 case "count" -> printCount();
-                case "info" -> showInfo();
             }
             System.out.println();
         }
     }
+
+    private static void updatePhonebook() {
+    }
+
 
     private static void editContact() {
         if (contacts.isEmpty()) {
@@ -50,7 +87,7 @@ public class PunctualPhonebook {
                 case "address" -> contact.changeAddress(updatedValue);
                 case "number" -> contact.changeNumber(updatedValue);
             }
-            contact.lastEditDate = LocalDateTime.now();
+            contact.lastEditDate = LocalDateTime.now().toString();
         } else {
             PersonContact contact = (PersonContact) selectedContact;
             String updatedValue = getInput(String.format("Enter %s: ", fieldToEdit));
@@ -62,15 +99,27 @@ public class PunctualPhonebook {
                 case "gender" -> contact.changeGender(updatedValue);
                 case "number" -> contact.changeNumber(updatedValue);
             }
-            contact.lastEditDate = LocalDateTime.now();
+            contact.lastEditDate = LocalDateTime.now().toString();
         }
         System.out.println("The record updated!");
     }
 
     private static void listContacts() {
+        currentOption = OPTION.LIST;
         for (int i = 0; i < contacts.size(); i++) {
             System.out.printf("%d. %s\n", i + 1, contacts.get(i).name);
         }
+        System.out.println();
+        input = getInput(currentOption, LIST_ACTIONS);
+        try {
+            int index = Integer.parseInt(input);
+            printRecord(index - 1);
+        } catch (NumberFormatException e) {
+            if (input.equals("back")) {
+                currentOption = OPTION.MENU;
+            }
+        }
+
     }
 
     private static void addContact() {
@@ -80,7 +129,9 @@ public class PunctualPhonebook {
             case "organization" -> addOrgContact();
         }
         System.out.println("The record added.");
+        updateFile();
     }
+
 
     private static void addPersonContact() {
         String firstName = getInput("Enter the name: ");
@@ -138,19 +189,69 @@ public class PunctualPhonebook {
         System.out.println("The record removed!");
     }
 
-    private static void showInfo() {
-        listContacts();
-        int contactIndex = Integer.parseInt(getInput("Enter index to show info: ")) - 1;
-        Contact selectedContact = contacts.get(contactIndex);
-        System.out.println(selectedContact);
-    }
-
     private static void printCount() {
         System.out.printf("The Phone Book has %d records.\n", contacts.size());
+    }
+
+    private static void searchContacts() {
+        currentOption = OPTION.SEARCH;
+
+
+        List<Contact> foundItems = new ArrayList<>();
+        List<Integer> indexes = new ArrayList<>();
+
+        while (!input.equalsIgnoreCase("back")) {
+            String query = getInput("Enter search query: ").toLowerCase();
+            for (int i = 0; i < contacts.size(); i++) {
+                SerializableContact contact = contacts.get(i);
+                if (contact.getStringValueOfFields().toLowerCase().contains(query)) {
+                    foundItems.add(contact);
+                    indexes.add(i);
+                }
+            }
+
+            System.out.printf("Found %d results\n", foundItems.size());
+            for (int i = 0; i < foundItems.size(); i++) {
+                System.out.printf("%d. %s\n", i + 1, foundItems.get(i).name);
+            }
+            System.out.println();
+
+            input = getInput(currentOption, SEARCH_ACTIONS);
+            try {
+                int index = Integer.parseInt(input);
+                printRecord(indexes.get(index - 1));
+            } catch (NumberFormatException _) {
+                foundItems.clear();
+                indexes.clear();
+            }
+        }
+    }
+
+    private static void printRecord(int index) {
+
+    }
+
+    private static void updateFile() {
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write("");
+            for (SerializableContact contact : contacts) {
+                writer.append(jsonAdapter.toJson(contact)).append('\n');
+            }
+        } catch (IOException e) {
+            System.out.printf("An exception occurred %s", e.getMessage());
+        }
     }
 
     private static String getInput(String message) {
         System.out.printf("%s", message);
         return sc.nextLine();
     }
+
+
+    private static String getInput(OPTION option, String message) {
+        System.out.printf("[%s] %s", option.name().toLowerCase(), message);
+        return sc.nextLine();
+    }
 }
+
+// Remaining: Search functionality

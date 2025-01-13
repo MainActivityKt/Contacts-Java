@@ -1,4 +1,4 @@
-package contacts.punctualphonebook;
+package contacts.memorablephonebook;
 
 import contacts.GENDER;
 import utils.Validator;
@@ -6,14 +6,14 @@ import utils.Validator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-class PersonContact extends Contact {
+class PersonContact extends SerializableContact {
     String firstname;
     String lastName;
     LocalDate birthday;
     GENDER gender;
 
     public PersonContact(String firstName, String lastName, LocalDate birthday, GENDER gender, String phoneNumber) {
-        super(firstName + " " + lastName, phoneNumber, LocalDateTime.now(), LocalDateTime.now());
+        super(firstName + " " + lastName, phoneNumber, LocalDateTime.now().toString(), LocalDateTime.now().toString());
         this.firstname = firstName;
         this.lastName = lastName;
         this.birthday = birthday;
@@ -34,6 +34,8 @@ class PersonContact extends Contact {
                 gender != null ? gender : "[no data]", phoneNumber != null ? phoneNumber : "[no data]",
                 creationDate, lastEditDate);
     }
+
+
 
     void changeFirstName(String updatedFirstName) {
         firstname = updatedFirstName;
@@ -70,6 +72,17 @@ class PersonContact extends Contact {
                 yield null;
             }
         };
+    }
+
+    @Override
+    String modifyField(String fieldName, String newValue) {
+        return "";
+    }
+
+    @Override
+    String getStringValueOfFields() {
+        return String.format("%s %s %s %s %s", firstname, lastName, birthday != null ? birthday : "",
+                gender != null ? gender : "", phoneNumber != null ? phoneNumber : "");
     }
 
     @Override

@@ -13,6 +13,7 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
     implementation(kotlin("stdlib-jdk8"))
 }
 

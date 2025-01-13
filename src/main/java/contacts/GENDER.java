@@ -1,6 +1,6 @@
-package contacts.punctualphonebook;
+package contacts;
 
-enum Gender {
+public enum GENDER {
     M, F;
 
     @Override

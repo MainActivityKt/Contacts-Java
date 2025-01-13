@@ -11,6 +11,7 @@ class SingleContact {
 
         System.out.println("Enter the surname of the person:");
         String lastName = sc.nextLine();
+
         System.out.println("Enter the number:");
         String number = sc.nextLine();
 
