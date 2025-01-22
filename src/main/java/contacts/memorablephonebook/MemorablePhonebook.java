@@ -5,8 +5,7 @@ import com.squareup.moshi.Moshi;
 import contacts.GENDER;
 import utils.Validator;
 import java.io.*;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -39,7 +38,6 @@ public class MemorablePhonebook {
             file.deleteOnExit();
         }
 
-
         while (!input.equalsIgnoreCase("exit")) {
             currentOption = OPTION.MENU;
             input = getInput(currentOption, MENU_ITEMS);
@@ -57,11 +55,11 @@ public class MemorablePhonebook {
     private static void editContact(Contact contact) {
 
         String fieldToEdit = getInput(String.format("Select a field (%s): ", contact.getModifiableFields())).toLowerCase();
-
         String newValue = getInput(String.format("Enter %s: ", fieldToEdit));
 
         contact.modifyField(fieldToEdit, newValue);
         contact.lastEditDate = LocalDateTime.now().toString();
+
         System.out.println("The record updated!");
     }
 
@@ -91,7 +89,6 @@ public class MemorablePhonebook {
         System.out.println("The record added.");
         updateFile();
     }
-
 
     private static void addPersonContact() {
         String firstName = getInput("Enter the name: ");
@@ -138,14 +135,12 @@ public class MemorablePhonebook {
         contacts.add(new OrganizationContact(name, address, number));
     }
 
-
     private static void printCount() {
         System.out.printf("The Phone Book has %d records.\n", contacts.size());
     }
 
     private static void searchContacts() {
         currentOption = OPTION.SEARCH;
-
 
         List<Contact> foundItems = new ArrayList<>();
         List<Integer> indexes = new ArrayList<>();
@@ -220,7 +215,6 @@ public class MemorablePhonebook {
         System.out.printf("%s", message);
         return sc.nextLine();
     }
-
 
     private static String getInput(OPTION option, String message) {
         System.out.printf("[%s] %s", option.name().toLowerCase(), message);
