@@ -3,80 +3,71 @@ package contacts.memorablephonebook;
 import contacts.GENDER;
 import utils.Validator;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-class PersonContact extends SerializableContact {
+class PersonContact extends Contact {
     String firstname;
     String lastName;
-    LocalDate birthday;
+    String birthday;
     GENDER gender;
 
     public PersonContact(String firstName, String lastName, LocalDate birthday, GENDER gender, String phoneNumber) {
         super(firstName + " " + lastName, phoneNumber, LocalDateTime.now().toString(), LocalDateTime.now().toString());
         this.firstname = firstName;
         this.lastName = lastName;
-        this.birthday = birthday;
+        this.birthday = birthday != null ? birthday.toString() : null;
         this.gender = gender;
     }
 
     @Override
-    public String toString() {
-        return String.format("""
-                Name: %s
-                Surname: %s
-                Birth date: %s
-                Gender: %s
-                Number: %s
-                Time created: %s
-                Time last edit: %s
-                """, firstname, lastName, birthday != null ? birthday : "[no data]",
+    void print() {
+        System.out.printf("""
+                        Name: %s
+                        Surname: %s
+                        Birth date: %s
+                        Gender: %s
+                        Number: %s
+                        Time created: %s
+                        Time last edit: %s
+                        %n""", firstname, lastName, birthday != null ? birthday : "[no data]",
                 gender != null ? gender : "[no data]", phoneNumber != null ? phoneNumber : "[no data]",
                 creationDate, lastEditDate);
     }
 
-
-
-    void changeFirstName(String updatedFirstName) {
-        firstname = updatedFirstName;
-    }
-
-    void changeSurname(String updatedSurname) {
-        lastName = updatedSurname;
-    }
-
-    void changeNumber(String updatedNumber) {
-        if (Validator.isPhoneNumberValid(updatedNumber)) {
-            phoneNumber = updatedNumber;
-        } else {
-            System.out.println("Wrong number format!");
-            phoneNumber = null;
-        }
-    }
-
-    void changeBirthday(String updatedBirthday) {
-        if (Validator.isBirthDateValid(updatedBirthday)) {
-            birthday = LocalDate.parse(updatedBirthday);
-        } else {
-            System.out.println("Bad birth date!");
-            birthday = null;
-        }
-    }
-
-    void changeGender(String updatedGender) {
-        gender = switch (updatedGender.toUpperCase()) {
-            case "M" -> GENDER.M;
-            case "F" -> GENDER.F;
-            default -> {
-                System.out.println("Bad gender!");
-                yield null;
-            }
-        };
-    }
-
     @Override
-    String modifyField(String fieldName, String newValue) {
-        return "";
+    void modifyField(String fieldName, String newValue) {
+        switch (fieldName) {
+            case "name" -> this.firstname = newValue;
+            case "surname" -> this.lastName = newValue;
+            case "birth" -> {
+                if (Validator.isBirthDateValid(newValue)) {
+                    birthday = LocalDate.parse(newValue).toString();
+                } else {
+                    System.out.println("Bad birth date!");
+                    birthday = null;
+                }
+            }
+            case "gender" -> {
+                this.gender = switch (newValue.toUpperCase()) {
+                    case "M" -> GENDER.M;
+                    case "F" -> GENDER.F;
+                    default -> {
+                        System.out.println("Bad gender!");
+                        yield null;
+                    }
+                };
+            }
+            case "number" -> {
+                if (Validator.isPhoneNumberValid(newValue)) {
+                    phoneNumber = newValue;
+                } else {
+                    System.out.println("Wrong number format!");
+                    phoneNumber = null;
+                }
+            }
+        }
     }
 
     @Override
@@ -86,7 +77,7 @@ class PersonContact extends SerializableContact {
     }
 
     @Override
-    public String getModifiableFields() {
+    String getModifiableFields() {
         return "name, surname, birth, gender, number";
     }
 }

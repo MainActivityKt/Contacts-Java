@@ -2,9 +2,11 @@ package contacts.memorablephonebook;
 
 import utils.Validator;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-class OrganizationContact extends SerializableContact {
+
+class OrganizationContact extends Contact {
     String address;
 
     public OrganizationContact(String name, String address, String phoneNumber) {
@@ -13,43 +15,38 @@ class OrganizationContact extends SerializableContact {
     }
 
     @Override
-    public String toString() {
-        return String.format("""
+    void print() {
+        System.out.printf("""
                 Organization name: %s
                 Address: %s
                 Number: %s
                 Time created: %s
                 Time last edit: %s
-                """, name, address, phoneNumber, creationDate, lastEditDate);
+                %n""", name, address, phoneNumber, creationDate, lastEditDate);
     }
 
     @Override
-    String modifyField(String fieldName, String newValue) {
-        return "";
+    void modifyField(String fieldName, String newValue) {
+        switch (fieldName) {
+            case "address" -> this.address = newValue;
+            case "number" -> {
+                if (Validator.isPhoneNumberValid(newValue)) {
+                    phoneNumber = newValue;
+                } else {
+                    System.out.println("Wrong number format!");
+                    phoneNumber = null;
+                }
+            }
+        }
     }
 
     @Override
     String getStringValueOfFields() {
-        return "";
+        return String.format("%s %s %s", name, address, phoneNumber != null ? phoneNumber : "");
     }
 
     @Override
     String getModifiableFields() {
         return "address, number";
     }
-
-    void changeAddress(String newAddress) {
-        address = newAddress;
-    }
-
-    void changeNumber(String updatedNumber) {
-        if (Validator.isPhoneNumberValid(updatedNumber)) {
-            phoneNumber = updatedNumber;
-        } else {
-            System.out.println("Wrong number format!");
-            phoneNumber = null;
-        }
-    }
-
-
 }

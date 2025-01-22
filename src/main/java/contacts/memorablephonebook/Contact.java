@@ -16,10 +16,12 @@ abstract public class Contact {
         this.lastEditDate = lastEditDate;
     }
 
-    abstract String modifyField(String fieldName, String newValue);
+    abstract void modifyField(String fieldName, String newValue);
 
     abstract String getStringValueOfFields();
 
     abstract String getModifiableFields();
+
+    abstract void print();
 }
 

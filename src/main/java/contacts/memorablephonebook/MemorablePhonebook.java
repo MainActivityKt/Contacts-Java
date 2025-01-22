@@ -3,17 +3,13 @@ package contacts.memorablephonebook;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import contacts.GENDER;
-import kotlin.text.Regex;
 import utils.Validator;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.regex.Pattern;
 
 
 public class MemorablePhonebook {
@@ -25,27 +21,22 @@ public class MemorablePhonebook {
     static String input = "";
 
     static Scanner sc = new Scanner(System.in);
-    static ArrayList<SerializableContact> contacts = new ArrayList<>();
+    static ArrayList<Contact> contacts = new ArrayList<>();
     static File file;
     static OPTION currentOption;
 
-
-    static final Moshi MOSHI = new Moshi.Builder().build();
-    static JsonAdapter<SerializableContact> jsonAdapter = MOSHI.adapter(SerializableContact.class);
+    static Moshi moshi = new Moshi.Builder().build();
+    static JsonAdapter<PersonContact> personAdapter = moshi.adapter(PersonContact.class);
+    static JsonAdapter<OrganizationContact> orgAdapter = moshi.adapter(OrganizationContact.class);
 
     public static void main(String[] args) throws IOException {
-
 
         if (args.length == 2) {
             file = new File(args[1]);
         } else {
             file = new File("phonebook.db");
-            System.out.println("Created");
-        }
-        List<String> lines = Files.readAllLines(file.toPath());
-
-        for (String line : lines) {
-            contacts.add(jsonAdapter.fromJson(line));
+            file.createNewFile();
+            file.deleteOnExit();
         }
 
 
@@ -63,44 +54,14 @@ public class MemorablePhonebook {
         }
     }
 
-    private static void updatePhonebook() {
-    }
+    private static void editContact(Contact contact) {
 
+        String fieldToEdit = getInput(String.format("Select a field (%s): ", contact.getModifiableFields())).toLowerCase();
 
-    private static void editContact() {
-        if (contacts.isEmpty()) {
-            System.out.println("No records to edit!");
-            return;
-        }
-        listContacts();
-        int contactIndex = Integer.parseInt(getInput("Select a record: ")) - 1;
-        Contact selectedContact = contacts.get(contactIndex);
+        String newValue = getInput(String.format("Enter %s: ", fieldToEdit));
 
-        String fieldToEdit = getInput(
-                String.format("Select a field (%s): ", selectedContact.getModifiableFields())
-        ).toLowerCase();
-
-        if (selectedContact instanceof OrganizationContact contact) {
-            String updatedValue = getInput(String.format("Enter %s: ", fieldToEdit));
-
-            switch (fieldToEdit.toLowerCase()) {
-                case "address" -> contact.changeAddress(updatedValue);
-                case "number" -> contact.changeNumber(updatedValue);
-            }
-            contact.lastEditDate = LocalDateTime.now().toString();
-        } else {
-            PersonContact contact = (PersonContact) selectedContact;
-            String updatedValue = getInput(String.format("Enter %s: ", fieldToEdit));
-
-            switch (fieldToEdit) {
-                case "name" -> contact.changeFirstName(updatedValue);
-                case "surname" -> contact.changeSurname(updatedValue);
-                case "birth" -> contact.changeBirthday(updatedValue);
-                case "gender" -> contact.changeGender(updatedValue);
-                case "number" -> contact.changeNumber(updatedValue);
-            }
-            contact.lastEditDate = LocalDateTime.now().toString();
-        }
+        contact.modifyField(fieldToEdit, newValue);
+        contact.lastEditDate = LocalDateTime.now().toString();
         System.out.println("The record updated!");
     }
 
@@ -119,7 +80,6 @@ public class MemorablePhonebook {
                 currentOption = OPTION.MENU;
             }
         }
-
     }
 
     private static void addContact() {
@@ -178,16 +138,6 @@ public class MemorablePhonebook {
         contacts.add(new OrganizationContact(name, address, number));
     }
 
-    private static void removeContact() {
-        if (contacts.isEmpty()) {
-            System.out.println("No records to remove!");
-            return;
-        }
-        listContacts();
-        int contactNumber = Integer.parseInt(getInput("Select a record: "));
-        contacts.remove(contactNumber - 1);
-        System.out.println("The record removed!");
-    }
 
     private static void printCount() {
         System.out.printf("The Phone Book has %d records.\n", contacts.size());
@@ -200,17 +150,17 @@ public class MemorablePhonebook {
         List<Contact> foundItems = new ArrayList<>();
         List<Integer> indexes = new ArrayList<>();
 
-        while (!input.equalsIgnoreCase("back")) {
+        do {
             String query = getInput("Enter search query: ").toLowerCase();
             for (int i = 0; i < contacts.size(); i++) {
-                SerializableContact contact = contacts.get(i);
+                Contact contact = contacts.get(i);
                 if (contact.getStringValueOfFields().toLowerCase().contains(query)) {
                     foundItems.add(contact);
                     indexes.add(i);
                 }
             }
 
-            System.out.printf("Found %d results\n", foundItems.size());
+            System.out.printf("Found %d results:\n", foundItems.size());
             for (int i = 0; i < foundItems.size(); i++) {
                 System.out.printf("%d. %s\n", i + 1, foundItems.get(i).name);
             }
@@ -220,22 +170,46 @@ public class MemorablePhonebook {
             try {
                 int index = Integer.parseInt(input);
                 printRecord(indexes.get(index - 1));
-            } catch (NumberFormatException _) {
+            } catch (NumberFormatException e) {
                 foundItems.clear();
                 indexes.clear();
             }
-        }
+        } while (input.equalsIgnoreCase("again"));
     }
 
     private static void printRecord(int index) {
+        currentOption = OPTION.RECORD;
+        Contact currentContact = contacts.get(index);
 
+        currentContact.print();
+        System.out.println();
+
+        while (!input.equalsIgnoreCase("menu")) {
+            input = getInput(currentOption, "Enter action (edit, delete, menu): ").toLowerCase();
+            switch (input) {
+                case "edit" -> editContact(currentContact);
+                case "delete" -> {
+                    contacts.remove(index);
+                    System.out.println("The record removed!\n");
+                    updateFile();
+                    return;
+                }
+            }
+        }
+        currentOption = OPTION.MENU;
+        System.out.println();
     }
 
     private static void updateFile() {
         try (FileWriter writer = new FileWriter(file)) {
             writer.write("");
-            for (SerializableContact contact : contacts) {
-                writer.append(jsonAdapter.toJson(contact)).append('\n');
+            for (Contact contact: contacts) {
+                if (contact instanceof PersonContact) {
+                    writer.append("p").append(personAdapter.toJson((PersonContact) contact));
+                } else if (contact instanceof OrganizationContact) {
+                    writer.append("o").append(orgAdapter.toJson((OrganizationContact) contact));
+                }
+                writer.append("\n");
             }
         } catch (IOException e) {
             System.out.printf("An exception occurred %s", e.getMessage());
@@ -253,5 +227,3 @@ public class MemorablePhonebook {
         return sc.nextLine();
     }
 }
-
-// Remaining: Search functionality
